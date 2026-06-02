@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuis Interaktif Pencak Silat</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #27ae60;
+            --bg-color: #f4f6f7;
+            --text-color: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .quiz-container {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            width: 100%;
+            max-width: 600px;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            background-color: var(--secondary-color);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .question {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option-btn {
+            background-color: #fff;
+            border: 2px solid #dcdde1;
+            border-radius: 6px;
+            padding: 14px;
+            font-size: 16px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .option-btn:hover {
+            background-color: #f5f6fa;
+            border-color: var(--primary-color);
+        }
+
+        .option-btn.correct {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+
+        .option-btn.wrong {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+
+        .footer {
+            margin-top: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .score-board {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .next-btn, .action-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            display: none;
+        }
+
+        .next-btn:hover, .action-btn:hover {
+            opacity: 0.9;
+        }
+
+        .result-screen {
+            text-align: center;
+            display: none;
+        }
+
+        .result-screen h2 {
+            color: var(--primary-color);
+        }
+
+        .final-score {
+            font-size: 48px;
+            font-weight: bold;
+            color: var(--secondary-color);
+            margin: 20px 0;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .btn-download {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <div id="quiz-box">
+        <h1 id="quiz-title">Kuis Pencak Silat</h1>
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+        <div class="question" id="question-text">Memuat pertanyaan...</div>
+        <div class="options-container" id="options-box">
+            </div>
+        <div class="footer">
+            <div class="score-board" id="score-text">Pertanyaan 1 dari 15</div>
+            <button class="next-btn" id="next-button" onclick="nextQuestion()">Lanjut</button>
+        </div>
+    </div>
+
+    <div id="result-box" class="result-screen">
+        <h2>Kuis Selesai!</h2>
+        <p>Berikut adalah hasil pencapaian Anda:</p>
+        <div class="final-score" id="final-score-text">0</div>
+        <p id="result-summary"></p>
+        <div class="btn-group">
+            <button class="action-btn" style="display: inline-block;" onclick="restartQuiz()">Ulangi Kuis</button>
+            <button class="action-btn btn-download" style="display: inline-block;" onclick="downloadResult()">Unduh Hasil (.txt)</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Data pertanyaan berdasarkan dokumen materi Pencak Silat
+    const quizData = [
+        {
+            q: "Apa pengertian dari Pencak Silat berdasarkan materi?",
+            a: ["Olahraga modern dari luar negeri", "Olahraga bela diri tradisional Indonesia yang menggabungkan seni, olahraga, bela diri, dan spiritual", "Seni tari modern tanpa unsur bela diri", "Olahraga ketangkasan berkuda"],
+            correct: 1
+        },
+        {
+            q: "Unsur apa saja yang digabungkan dalam olahraga bela diri Pencak Silat?",
+            a: ["Seni, olahraga, bela diri, dan spiritual", "Bisnis, hiburan, politik, dan kekuatan", "Kecepatan, kekuatan mekanik, dan trik", "Ketangkasan hewan, akrobatik, dan modernitas"],
+            correct: 0
+        },
+        {
+            q: "Bagaimana karakteristik gerakan dalam Pencak Silat?",
+            a: ["Spontan, acak, dan agresif", "Bebas, tanpa aturan, dan cepat", "Terencana, terarah, serta mencerminkan nilai budaya bangsa", "Lambat, kaku, dan hanya untuk pertunjukan"],
+            correct: 2
+        },
+        {
+            q: "Gerakan dalam pencak silat mencerminkan nilai...",
+            a: ["Budaya bangsa", "Internasional modern", "Individualisme ekstrim", "Materi dan keuntungan"],
+            correct: 0
+        },
+        {
+            q: "Selain untuk membela diri, apa tujuan lain dari Pencak Silat?",
+            a: ["Membentuk kepribadian yang kuat, disiplin, dan menjunjung nilai luhur bangsa", "Mencari musuh dan menunjukkan kekuatan fisik", "Mendapatkan popularitas instan di media sosial", "Menghindari aktivitas fisik harian"],
+            correct: 0
+        },
+        {
+            q: "Manakah nilai yang diajarkan dalam Pencak Silat selain melatih fisik?",
+            a: ["Kelicikan, ambisi, dan kemewahan", "Disiplin, jujur, tanggung jawab, kerja sama, serta toleransi", "Kekejaman, egoisme, dan ketakutan", "Ketidakpedulian dan persaingan tidak sehat"],
+            correct: 1
+        },
+        {
+            q: "Nilai-nilai dalam Pencak Silat menjadikannya bukan sekadar teknik bela diri, melainkan juga sarana...",
+            a: ["Pertunjukan komersial", "Pembentukan karakter", "Mencari keuntungan materi", "Rekreasi semata tanpa aturan"],
+            correct: 1
+        },
+        {
+            q: "Apa saja komponen yang meliputi sikap dan gerakan dasar dalam Pencak Silat?",
+            a: ["Sikap berdiri, posisi kuda-kuda, pola langkah, serangan, dan tangkisan", "Lari jarak pendek, lompat, dan lempar", "Seni peran, pernapasan dalam, dan meditasi duduk", "Penggunaan senjata api dan taktik modern"],
+            correct: 0
+        },
+        {
+            q: "Bagaimana cara melakukan serangan dan tangkisan pada gerakan dasar Pencak Silat?",
+            a: ["Secara bebas dan tanpa kontrol", "Secara teratur dan terkontrol", "Secara cepat tanpa melihat lawan", "Secara agresif hingga mencederai"],
+            correct: 1
+        },
+        {
+            q: "Apa yang dimaksud dengan 'Sikap Berdiri' dalam Pencak Silat?",
+            a: ["Posisi istirahat setelah latihan selesai", "Sikap yang menjadi posisi awal sebelum melakukan gerakan lainnya", "Gerakan melompat untuk menghindari lawan", "Posisi jatuh saat terkena serangan"],
+            correct: 1
+        },
+        {
+            q: "Apa fungsi utama dari posisi 'Kuda-Kuda'?",
+            a: ["Untuk berlari cepat mengejar lawan", "Posisi kaki untuk menjaga keseimbangan tubuh saat menyerang atau bertahan", "Gerakan khusus untuk menghormati pelatih", "Sikap tidur untuk memulihkan tenaga"],
+            correct: 1
+        },
+        {
+            q: "Berikut ini yang termasuk jenis-jenis kuda-kuda berdasarkan materi adalah...",
+            a: ["Kuda-kuda tinggi, rendah, melompat, dan terbang", "Kuda-kuda satu kaki, dua kaki, dan bersila", "Kuda-kuda depan, belakang, samping, dan tengah", "Kuda-kuda luar, dalam, atas, dan bawah"],
+            correct: 2
+        },
+        {
+            q: "Gerakan serangan dalam Pencak Silat dilakukan dengan menggunakan...",
+            a: ["Alat bantu tali atau tongkat saja", "Tangan atau kaki, seperti pukulan, tendangan, dan dorongan", "Kepala dan bahu secara dominan", "Hanya menggunakan telapak tangan"],
+            correct: 1
+        },
+        {
+            q: "Apa pengertian dari 'Tangkisan' (Gerak Pembelaan)?",
+            a: ["Upaya menahan atau menghindari serangan lawan untuk melindungi diri", "Gerakan membalas serangan dengan membabi buta", "Taktik menjatuhkan diri agar tidak terkena sanksi", "Sikap menyerah saat terdesak"],
+            correct: 0
+        },
+        {
+            q: "Langkah apa saja yang diperlukan untuk menjaga keamanan dan mencegah cedera selama latihan?",
+            a: ["Langsung melakukan gerakan berat tanpa jeda", "Mengabaikan instruksi pelatih", "Selalu menggunakan alat pelindung, pemanasan sebelum latihan, dan lakukan gerakan secara terkendali", "Latihan di tempat yang keras tanpa pelindung apa pun"],
+            correct: 2
+        }
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let selectedQuestions = [];
+    let userAnswers = [];
+
+    // Fungsi memulai kuis dengan mengacak urutan soal
+    function startQuiz() {
+        // Mengacak soal
+        selectedQuestions = [...quizData].sort(() => 05 - Math.random());
+        currentQuestionIndex = 0;
+        score = 0;
+        userAnswers = [];
+        document.getElementById("quiz-box").style.display = "block";
+        document.getElementById("result-box").style.display = "none";
+        showQuestion();
+    }
+
+    // Menampilkan soal ke layar
+    function showQuestion() {
+        resetState();
+        let currentQuestion = selectedQuestions[currentQuestionIndex];
+        let questionNo = currentQuestionIndex + 1;
+        
+        document.getElementById("question-text").innerText = questionNo + ". " + currentQuestion.q;
+        document.getElementById("score-text").innerText = `Pertanyaan ${questionNo} dari ${selectedQuestions.length}`;
+        
+        // Update Progress Bar
+        let progressPercent = ((questionNo - 1) / selectedQuestions.length) * 100;
+        document.getElementById("progress").style.width = progressPercent + "%";
+
+        currentQuestion.a.forEach((option, index) => {
+            const button = document.createElement("button");
+            button.innerText = option;
+            button.classList.add("option-btn");
+            button.addEventListener("click", () => selectAnswer(index, button));
+            document.getElementById("options-box").appendChild(button);
+        });
+    }
+
+    // Menghapus pilihan sebelumnya
+    function resetState() {
+        document.getElementById("next-button").style.display = "none";
+        const optionsBox = document.getElementById("options-box");
+        while (optionsBox.firstChild) {
+            optionsBox.removeChild(optionsBox.firstChild);
+        }
+    }
+
+    // Aksi ketika pengguna memilih jawaban
+    function selectAnswer(selectedIndex, clickedButton) {
+        let currentQuestion = selectedQuestions[currentQuestionIndex];
+        const allButtons = document.querySelectorAll(".option-btn");
+        
+        // Simpan jawaban pengguna
+        userAnswers.push({
+            question: currentQuestion.q,
+            userAns: currentQuestion.a[selectedIndex],
+            correctAns: currentQuestion.a[currentQuestion.correct],
+            isCorrect: selectedIndex === currentQuestion.correct
+        });
+
+        if (selectedIndex === currentQuestion.correct) {
+            clickedButton.classList.add("correct");
+            score++;
+        } else {
+            clickedButton.classList.add("wrong");
+            // Tunjukkan jawaban yang benar
+            allButtons[currentQuestion.correct].classList.add("correct");
+        }
+
+        // Nonaktifkan semua tombol setelah menjawab
+        allButtons.forEach(button => button.disabled = true);
+        document.getElementById("next-button").style.display = "block";
+    }
+
+    // Tombol lanjut
+    function nextQuestion() {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < selectedQuestions.length) {
+            showQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    // Menampilkan layar skor akhir
+    function showResult() {
+        document.getElementById("quiz-box").style.display = "none";
+        document.getElementById("result-box").style.display = "block";
+        
+        let finalScore = Math.round((score / selectedQuestions.length) * 100);
+        document.getElementById("final-score-text").innerText = finalScore;
+        document.getElementById("result-summary").innerText = `Anda menjawab benar ${score} dari ${selectedQuestions.length} pertanyaan.`;
+    }
+
+    // Fungsi reset kuis
+    function restartQuiz() {
+        startQuiz();
+    }
+
+    // Fungsi mengunduh hasil kuis dalam bentuk file .txt
+    function downloadResult() {
+        let finalScore = Math.round((score / selectedQuestions.length) * 100);
+        let textContent = `=========================================\n`;
+        textContent += `        HASIL KUIS PENCAK SILAT          \n`;
+        textContent += `=========================================\n`;
+        textContent += `Tanggal Evaluasi : ${new Date().toLocaleDateString('id-ID')}\n`;
+        textContent += `Skor Akhir       : ${finalScore} / 100\n`;
+        textContent += `Benar            : ${score} soal\n`;
+        textContent += `Salah            : ${selectedQuestions.length - score} soal\n\n`;
+        textContent += `Rincian Jawaban:\n`;
+        
+        userAnswers.forEach((item, i) => {
+            textContent += `${i + 1}. ${item.question}\n`;
+            textContent += `   Jawaban Anda : ${item.userAns} [${item.isCorrect ? 'BENAR' : 'SALAH'}]\n`;
+            if(!item.isCorrect) {
+                textContent += `   Kunci Jawaban: ${item.correctAns}\n`;
+            }
+            textContent += `\n`;
+        });
+
+        const blob = new Blob([textContent], { type: "text/plain;charset=utf-8" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `Hasil_Kuis_Pencak_Silat.txt`;
+        link.click();
+    }
+
+    // Jalankan kuis pertama kali saat halaman dibuka
+    window.onload = startQuiz;
+</script>
+
+</body>
+</html>
